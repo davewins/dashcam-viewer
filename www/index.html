@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashcam Clips</title>
+<style>
+:root{--bg:#f5f6f8;--fg:#1c1e21;--card:#fff;--mut:#6b7280;--acc:#2563eb;--bd:#d9dce1}
+@media (prefers-color-scheme:dark){:root{--bg:#14161a;--fg:#e6e8eb;--card:#1e2126;--mut:#9aa1ab;--acc:#60a5fa;--bd:#33383f}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select,button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
+button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+main{padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#0003;cursor:pointer}
+.meta{padding:8px 10px;display:flex;justify-content:space-between;gap:6px;font-size:13px}
+.meta span{color:var(--mut)}.rear{font-size:12px;padding:0 10px 8px}.rear a{color:var(--acc);cursor:pointer}
+.tag{font-size:11px;border-radius:4px;padding:1px 5px;background:var(--bd)}.tag.Event{background:#dc2626;color:#fff}.tag.Parking{background:#d97706;color:#fff}
+#empty{padding:24px;color:var(--mut)}
+dialog{border:0;border-radius:12px;padding:0;max-width:96vw;background:var(--card);color:var(--fg)}
+dialog::backdrop{background:#000a}dialog video{display:block;max-width:96vw;max-height:80vh;background:#000}
+.bar{display:flex;gap:8px;padding:8px;align-items:center;font-size:13px}.bar a{color:var(--acc)}.sp{flex:1}
+small{color:var(--mut)}
+</style></head><body>
+<header><select id="date"></select><span id="types"></span><small id="count"></small><small>⚠ = event clips, ● = parking clips on that date</small></header>
+<main id="grid"></main><div id="empty" hidden>No clips for this selection.</div>
+<dialog id="dlg"><video id="vid" controls autoplay playsinline></video>
+<div class="bar"><b id="vt"></b><span class="sp"></span><a id="sw" href="#"></a><a id="dl" download>Download</a><button id="x">Close</button></div>
+<div class="bar"><small>Clips are H.265 (HEVC). If the picture stays black, use Safari/Edge/the HA app, or Download and open in VLC.</small></div></dialog>
+<script>
+const R=/^(NO|PA|EV)(\d{8})-(\d{6})-(\d{6})([FR])\.MP4$/i;
+const $=s=>document.querySelector(s); let clips=[], filt=new Set(['Normal','Parking','Event']), view=[];
+const j=u=>fetch(u).then(r=>r.json());
+const mb=n=>(n/1048576).toFixed(0)+' MB';
+async function load(){
+  const ds=(await j('/clips/')).filter(e=>e.type==='directory'&&/^\d{4}-\d\d-\d\d$/.test(e.name)).map(e=>e.name).sort().reverse();
+  $('#date').innerHTML=ds.map(d=>`<option value="${d}">${d}</option>`).join('');
+  $('#date').onchange=show; const h=location.hash.slice(1); if(ds.includes(h)) $('#date').value=h;
+  $('#types').innerHTML=['Normal','Parking','Event'].map(t=>`<button class="on" data-t="${t}">${t}</button>`).join('');
+  $('#types').onclick=e=>{const t=e.target.dataset.t; if(!t)return; filt.has(t)?filt.delete(t):filt.add(t); e.target.classList.toggle('on'); render()};
+  $('#grid').onclick=e=>{const i=e.target.dataset.i; if(i!==undefined) play(view[i],e.target.dataset.s)};
+  show(); markDates(ds);
+}
+// Flag dates that hold Event or Parking clips so they can be spotted without opening each day.
+async function markDates(ds){
+  const cnt=async(d,t)=>{try{return new Set((await j(`/clips/${d}/${t}/`)).map(f=>(R.exec(f.name)||[])[4]).filter(Boolean)).size}catch(e){return 0}};
+  await Promise.all(ds.map(async d=>{
+    const [ev,pa]=await Promise.all([cnt(d,'Event'),cnt(d,'Parking')]);
+    if(!ev&&!pa) return;
+    const o=[...$('#date').options].find(x=>x.value===d); if(!o) return;
+    o.textContent=`${ev?'⚠ ':'● '}${d}  ·  `+[ev?`${ev} event${ev>1?'s':''}`:'',pa?`${pa} parking`:''].filter(Boolean).join(', ');
+  }));
+}
+async function show(){
+  const d=$('#date').value; location.hash=d; clips=[];
+  for(const t of ['Normal','Parking','Event']){
+    let l=[]; try{l=await j(`/clips/${d}/${t}/`)}catch(e){}
+    const m=new Map();
+    for(const f of l){const x=R.exec(f.name); if(!x)continue;
+      const k=x[4]; const c=m.get(k)||{type:t,counter:k,time:x[3],date:d}; c[x[5].toUpperCase()]={name:f.name,size:f.size}; m.set(k,c)}
+    clips.push(...m.values());
+  }
+  clips.sort((a,b)=>b.time.localeCompare(a.time)); render();
+}
+const path=(c,s)=>`${c.date}/${c.type}/${c[s].name}`;
+function render(){
+  view=clips.filter(c=>filt.has(c.type)); $('#count').textContent=view.length+' clips';
+  $('#empty').hidden=view.length>0;
+  $('#grid').innerHTML=view.map((c,i)=>{const s=c.F?'F':'R',t=c.time;
+    return `<div class="card"><img loading="lazy" data-i="${i}" data-s="${s}" src="/thumbs/${path(c,s).replace('.MP4','.jpg')}" onerror="this.style.opacity=.25" alt="">
+    <div class="meta"><b>${t.slice(0,2)}:${t.slice(2,4)}:${t.slice(4)}</b><span class="tag ${c.type}">${c.type}</span><span>${mb((c.F||c.R).size)}</span></div>
+    ${c.F&&c.R?`<div class="rear"><a data-i="${i}" data-s="R">▶ rear camera</a></div>`:''}</div>`}).join('');
+}
+function play(c,s){
+  const u='/clips/'+path(c,s), o=s==='F'?'R':'F';
+  $('#vid').src=u; $('#vt').textContent=`${c.date} ${c.time.slice(0,2)}:${c.time.slice(2,4)} ${c.type} (${s==='F'?'front':'rear'})`;
+  $('#dl').href=u; $('#sw').textContent=c[o]?`Show ${o==='F'?'front':'rear'}`:''; $('#sw').onclick=ev=>{ev.preventDefault(); if(c[o]) play(c,o)};
+  if(!$('#dlg').open) $('#dlg').showModal();
+}
+$('#x').onclick=()=>$('#dlg').close(); $('#dlg').onclose=()=>{$('#vid').pause();$('#vid').removeAttribute('src')};
+load();
+</script></body></html>

@@ -1,0 +1,30 @@
+# Home Assistant: notify when an Event or Parking clip is delivered.
+# Needs the MQTT messages published by github.com/davewins/70mai-dashcam-sync (topic dashcam/clip).
+# Put in packages/ (or merge into automations.yaml). Change notify.notify and the viewer URL to suit.
+automation:
+  - id: dashcam_event_clip_alert
+    alias: Dashcam event or parking clip
+    mode: single
+    max_exceeded: silent
+    triggers:
+      - trigger: mqtt
+        topic: dashcam/clip
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ trigger.payload_json.type in ['Event', 'Parking']
+             and trigger.payload_json.file.endswith('F.MP4') }}
+    actions:
+      - variables:
+          kind: "{{ trigger.payload_json.type }}"
+          day: "{{ trigger.payload_json.date }}"
+          clip_time: >-
+            {% set t = trigger.payload_json.file.split('-')[1] %}{{ t[0:2] }}:{{ t[2:4] }}
+      - action: notify.notify
+        data:
+          title: "Dashcam: {{ kind | lower }} clip"
+          message: "{{ kind }} clip recorded {{ day }} at {{ clip_time }} is now on the NAS."
+          data:
+            url: "http://YOUR-SERVER:8230/#{{ day }}"
+            tag: "dashcam-{{ kind | lower }}-{{ day }}"
+      - delay: "00:05:00"      # one notification per burst of parking clips
