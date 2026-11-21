@@ -34,3 +34,9 @@ also works.
 ## Licence
 
 MIT.
+
+## Look and feel
+
+The page uses the vewins brand kit: logo, favicon, colour tokens (`www/brand/tokens.css`) and a starfield background. It follows the OS light/dark setting by default, and the **Light/Dark** button in the header overrides it (remembered in the browser). To rebrand, replace the files in `www/brand/` and the favicons in `www/`.
+
+The date list only requests the `Normal`/`Parking`/`Event` folders that exist for each day, so there are no 404s in the browser console.

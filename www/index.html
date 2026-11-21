@@ -1,26 +1,38 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Dashcam Clips</title>
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png"><meta name="theme-color" content="#070b16" id="tc">
+<script>try{var t=localStorage.getItem('vw-theme');document.documentElement.dataset.theme=(t==='light'||t==='dark')?t:(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')}catch(e){document.documentElement.dataset.theme='dark'}</script>
+<link rel="stylesheet" href="/brand/tokens.css">
 <style>
-:root{--bg:#f5f6f8;--fg:#1c1e21;--card:#fff;--mut:#6b7280;--acc:#2563eb;--bd:#d9dce1}
-@media (prefers-color-scheme:dark){:root{--bg:#14161a;--fg:#e6e8eb;--card:#1e2126;--mut:#9aa1ab;--acc:#60a5fa;--bd:#33383f}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px system-ui,sans-serif}
-header{position:sticky;top:0;z-index:5;background:var(--bg);padding:12px 16px;border-bottom:1px solid var(--bd);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-select,button{font:inherit;color:var(--fg);background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:6px 10px}
-button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+:root{--hbg:rgba(7,11,22,.78);--cardbg:rgba(14,22,40,.82);--selbg:rgba(20,32,58,.85);--onacc:#04111f;--tagbg:var(--vw-space-700);--tagfg:var(--vw-space-100);--cardbd:rgba(56,189,248,.12);--dlgbg:var(--vw-space-925)}
+:root[data-theme=light]{--hbg:rgba(244,246,251,.88);--cardbg:#fff;--selbg:#fff;--onacc:#fff;--tagbg:var(--vw-space-200);--tagfg:var(--vw-space-700);--cardbd:var(--vw-border);--dlgbg:#fff}
+:root{--bg:var(--vw-bg);--fg:var(--vw-text);--card:var(--vw-surface);--mut:var(--vw-text-muted);--acc:var(--vw-accent);--bd:var(--vw-border)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--fg);font:15px var(--vw-font-sans);background-color:var(--vw-bg);background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(56,189,248,.16),transparent 70%),linear-gradient(rgba(7,11,22,.55),rgba(7,11,22,.80)),url(/brand/starfield.jpg);background-size:cover;background-position:center top;background-attachment:scroll;min-height:100vh}
+:root[data-theme=light] body{background-image:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(2,132,199,.10),transparent 70%)}
+header{position:sticky;top:0;z-index:5;background:var(--hbg);backdrop-filter:blur(8px);padding:10px 16px;border-bottom:1px solid var(--bd);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.brand{text-decoration:none;display:flex;align-items:center;gap:10px;margin-right:6px}.brand img{height:30px;display:block}.brand .lg-l{display:none}:root[data-theme=light] .brand .lg-l{display:block}:root[data-theme=light] .brand .lg-d{display:none}
+#theme{padding:6px 10px;margin-left:auto}
+.brand span{color:var(--mut);font-size:13px;border-left:1px solid var(--bd);padding-left:10px}
+select,button{font:inherit;color:var(--fg);background:var(--selbg);border:1px solid var(--bd);border-radius:var(--vw-radius);padding:6px 10px}
+select:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+button.on{background:var(--acc);border-color:var(--acc);color:var(--onacc);font-weight:600}
 main{padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.card{background:var(--cardbg);border:1px solid var(--cardbd);border-radius:10px;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+.card:hover{border-color:rgba(56,189,248,.45);box-shadow:0 0 0 1px rgba(56,189,248,.25),0 6px 22px rgba(2,132,199,.16)}
 .card img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:#0003;cursor:pointer}
 .meta{padding:8px 10px;display:flex;justify-content:space-between;gap:6px;font-size:13px}
 .meta span{color:var(--mut)}.rear{font-size:12px;padding:0 10px 8px}.rear a{color:var(--acc);cursor:pointer}
-.tag{font-size:11px;border-radius:4px;padding:1px 5px;background:var(--bd)}.tag.Event{background:#dc2626;color:#fff}.tag.Parking{background:#d97706;color:#fff}
+.tag{font-size:11px;border-radius:4px;padding:1px 5px;background:var(--tagbg);color:var(--tagfg)}.tag.Event{background:#dc2626;color:#fff}.tag.Parking{background:#d97706;color:#fff}
 #empty{padding:24px;color:var(--mut)}
-dialog{border:0;border-radius:12px;padding:0;max-width:96vw;background:var(--card);color:var(--fg)}
+dialog{border:1px solid var(--bd);border-radius:12px;padding:0;max-width:96vw;background:var(--dlgbg);color:var(--fg)}
 dialog::backdrop{background:#000a}dialog video{display:block;max-width:96vw;max-height:80vh;background:#000}
 .bar{display:flex;gap:8px;padding:8px;align-items:center;font-size:13px}.bar a{color:var(--acc)}.sp{flex:1}
 small{color:var(--mut)}
 </style></head><body>
-<header><select id="date"></select><span id="types"></span><small id="count"></small><small>⚠ = event clips, ● = parking clips on that date</small></header>
+<header><a class="brand" href="/"><img class="lg-d" src="/brand/logo-dark.svg" alt="vewins"><img class="lg-l" src="/brand/logo-light.svg" alt=""><span>Dashcam</span></a><select id="date"></select><span id="types"></span><small id="count"></small><small>⚠ = event clips, ● = parking clips on that date</small><button id="theme" type="button" title="Switch light / dark"></button></header>
 <main id="grid"></main><div id="empty" hidden>No clips for this selection.</div>
 <dialog id="dlg"><video id="vid" controls autoplay playsinline></video>
 <div class="bar"><b id="vt"></b><span class="sp"></span><a id="sw" href="#"></a><a id="dl" download>Download</a><button id="x">Close</button></div>
@@ -29,6 +41,8 @@ small{color:var(--mut)}
 const R=/^(NO|PA|EV)(\d{8})-(\d{6})-(\d{6})([FR])\.MP4$/i;
 const $=s=>document.querySelector(s); let clips=[], filt=new Set(['Normal','Parking','Event']), view=[];
 const j=u=>fetch(u).then(r=>r.json());
+// which of Normal/Parking/Event exist for a date (listing the date folder avoids 404s for absent ones)
+const types=async d=>{try{return new Set((await j(`/clips/${d}/`)).filter(e=>e.type==='directory').map(e=>e.name))}catch(e){return new Set()}};
 const mb=n=>(n/1048576).toFixed(0)+' MB';
 async function load(){
   const ds=(await j('/clips/')).filter(e=>e.type==='directory'&&/^\d{4}-\d\d-\d\d$/.test(e.name)).map(e=>e.name).sort().reverse();
@@ -41,9 +55,10 @@ async function load(){
 }
 // Flag dates that hold Event or Parking clips so they can be spotted without opening each day.
 async function markDates(ds){
-  const cnt=async(d,t)=>{try{return new Set((await j(`/clips/${d}/${t}/`)).map(f=>(R.exec(f.name)||[])[4]).filter(Boolean)).size}catch(e){return 0}};
+  const cnt=async(d,t,have)=>{if(!have.has(t))return 0;try{return new Set((await j(`/clips/${d}/${t}/`)).map(f=>(R.exec(f.name)||[])[4]).filter(Boolean)).size}catch(e){return 0}};
   await Promise.all(ds.map(async d=>{
-    const [ev,pa]=await Promise.all([cnt(d,'Event'),cnt(d,'Parking')]);
+    const have=await types(d);
+    const [ev,pa]=await Promise.all([cnt(d,'Event',have),cnt(d,'Parking',have)]);
     if(!ev&&!pa) return;
     const o=[...$('#date').options].find(x=>x.value===d); if(!o) return;
     o.textContent=`${ev?'⚠ ':'● '}${d}  ·  `+[ev?`${ev} event${ev>1?'s':''}`:'',pa?`${pa} parking`:''].filter(Boolean).join(', ');
@@ -51,7 +66,9 @@ async function markDates(ds){
 }
 async function show(){
   const d=$('#date').value; location.hash=d; clips=[];
+  const have=await types(d);
   for(const t of ['Normal','Parking','Event']){
+    if(!have.has(t)) continue;
     let l=[]; try{l=await j(`/clips/${d}/${t}/`)}catch(e){}
     const m=new Map();
     for(const f of l){const x=R.exec(f.name); if(!x)continue;
@@ -76,5 +93,8 @@ function play(c,s){
   if(!$('#dlg').open) $('#dlg').showModal();
 }
 $('#x').onclick=()=>$('#dlg').close(); $('#dlg').onclose=()=>{$('#vid').pause();$('#vid').removeAttribute('src')};
+const setTheme=t=>{document.documentElement.dataset.theme=t;try{localStorage.setItem('vw-theme',t)}catch(e){}paintTheme()};
+function paintTheme(){const t=document.documentElement.dataset.theme;$('#theme').textContent=t==='light'?'🌙 Dark':'☀ Light';$('#tc').content=t==='light'?'#f4f6fb':'#070b16'}
+$('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'); paintTheme();
 load();
 </script></body></html>
